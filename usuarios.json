@@ -1,0 +1,74 @@
+[
+{
+  "model": "auth.user",
+  "pk": 1,
+  "fields": {
+    "password": "pbkdf2_sha256$720000$lG6EW8s8CuElpjWyCrXWtN$fyvu5qnS0YHyQFbKz/Z8RavdKU2KEKPBIGPdT6Y3ERA=",
+    "last_login": "2025-11-03T23:51:18.110Z",
+    "is_superuser": true,
+    "username": "admin",
+    "first_name": "Helmer Fabian",
+    "last_name": "Zamorano Guevara",
+    "email": "fzamorano@greensqa.com",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2025-10-22T03:10:38Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "pk": 2,
+  "fields": {
+    "password": "pbkdf2_sha256$720000$fNdW2PBzG9PWstgnS5H1Ls$J4bnxF81/bWq7n3NLtRGwoA1DTADRKeRUm0qZBDdkEk=",
+    "last_login": "2025-11-03T23:35:13Z",
+    "is_superuser": false,
+    "username": "jmoreno",
+    "first_name": "Jonathan",
+    "last_name": "Moreno",
+    "email": "jmoreno@greensqa.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2025-11-03T23:29:42Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "pk": 3,
+  "fields": {
+    "password": "pbkdf2_sha256$720000$dZ2w1IGooNwxlhDiyI48C3$kIuqimbCKzhnvRGQeiZFo6v8YdlT5WzI38NJkQ6IS1g=",
+    "last_login": "2025-11-03T23:39:01Z",
+    "is_superuser": false,
+    "username": "aasprilla",
+    "first_name": "Alexander",
+    "last_name": "Asprilla",
+    "email": "aasprilla@greensqa.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2025-11-03T23:37:17Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "pk": 4,
+  "fields": {
+    "password": "pbkdf2_sha256$720000$Z1O93XS24T8etfYuiKnmqC$H09hvdCkVz9ZoGqy2vLEeC0WoeuFP49Uvdqc3wba8wI=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "cgordillo",
+    "first_name": "Carlos Eduardo",
+    "last_name": "Gordillo Agudelo",
+    "email": "cgordillo@greensqa.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2025-11-03T23:45:16Z",
+    "groups": [],
+    "user_permissions": []
+  }
+}
+]

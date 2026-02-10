@@ -1,0 +1,401 @@
+{% extends "base.html" %}
+{% block title %}Gestión de Comercios{% endblock %}
+
+{% block content %}
+<div class="main-section">
+            <h3 class="mb-4 text-success fw-bold">Gestión de Comercios</h3>
+
+           <!-- Mensajes -->
+            {% if messages %}
+            <div class="container mt-3">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Formulario -->
+            <form method="POST" action="{% url 'dashboard' %}">
+                {% csrf_token %}
+                <input type="hidden" name="comercio_id" id="comercio_id" value="{{ comercio.id|default:'' }}">
+
+                <div class="row g-4">
+
+                    <!-- Nombre Comercio -->
+                    <div class="col-md-4 form-floating">
+                        <input type="text" name="nombre" class="form-control" id="nombre"
+                            placeholder="nombre" value="{{ comercio.nombre|default:'' }}">
+                        <label for="nombre">Nombre Comercio</label>
+                    </div>
+
+                    <!-- UEN -->
+                    <div class="col-md-4 form-floating">
+                        <input type="text" name="uen" class="form-control" id="uen"
+                            placeholder="UEN" value="{{ uen }}">
+                        <label for="uen">UEN</label>
+                    </div>
+
+                    <!-- Estado -->
+                    <div class="col-md-4 form-floating">
+                        <select name="estado" class="form-select" id="estado">
+                            <option value="" disabled {% if not estado %}selected{% endif %}>Seleccione estado</option>
+                            <option value="Activo" {% if estado == "Activo" %}selected{% endif %}>Activo</option>
+                            <option value="Inactivo" {% if estado == "Inactivo" %}selected{% endif %}>Inactivo</option>
+                            <option value="Suspendido" {% if estado == "Suspendido" %}selected{% endif %}>Suspendido</option>
+                        </select>
+                    </div>
+
+                    <!-- Tipo -->
+                    <div class="col-md-4 form-floating">
+                        <select name="tipo" class="form-select" id="tipo">
+                            <option value="" disabled {% if not tipo %}selected{% endif %}>Seleccione Tipo</option>
+                            <option value="Nuevo" {% if tipo == "Nuevo" %}selected{% endif %}>Nuevo</option>
+                            <option value="Migrado" {% if tipo == "Migrado" %}selected{% endif %}>Migrado</option>
+                            <label for="tipo">Seleccione Tipo</label>
+                        </select>
+                    </div>
+
+                    <!-- País -->
+                    <div class="col-md-4 form-floating">
+                        <input type="text" name="pais" class="form-control" id="pais"
+                            placeholder="País" value="{{ pais }}">
+                        <label for="pais">País</label>
+                    </div>
+
+                    <!-- Transformaciones -->
+                    <div class="col-md-4 form-floating">
+                        <select name="transformaciones" class="form-select" id="transformaciones">
+                            <option value="" disabled {% if not transformaciones %}selected{% endif %}>Posee Transformaciones</option>
+                            <option value="Si" {% if transformaciones == "Si" %}selected{% endif %}>Sí</option>
+                            <option value="No" {% if transformaciones == "No" %}selected{% endif %}>No</option>
+                        </select>
+                    </div>
+
+                    <!-- Periodo Centinela -->
+                    <div class="col-md-4 form-floating">
+                        <input type="text" name="periodo_centinela" class="form-control"
+                            id="periodo_centinela" placeholder="Periodo Centinela"
+                            value="{{ periodo_centinela }}">
+                        <label for="periodo_centinela">Periodo Centinela</label>
+                    </div>
+
+                    <!-- Hora Centinela -->
+                    <div class="col-md-4 form-floating">
+                        <input type="time" name="hora_centinela" class="form-control"
+                            id="hora_centinela" value="{{ hora_centinela }}">
+                        <label for="hora_centinela">Hora Centinela</label>
+                    </div>
+
+                    <!-- Periodo Ejeción -->
+                    <div class="col-md-4 form-floating">
+                        <input type="text" name="periodo_ejecucion" class="form-control"
+                            id="periodo_ejecucion" placeholder="periodo_ejecucion"
+                            value="{{ periodo_ejecucion }}">
+                        <label for="periodo_ejecucion">Periodo Ejecución</label>
+                    </div>
+
+                    <!-- Hora Ejecición -->
+                    <div class="col-md-4 form-floating">
+                        <input type="time" name="hora_ejecucion" class="form-control"
+                            id="hora_ejecucion" value="{{ hora_ejecucion }}">
+                        <label for="hora_ejecucion">Hora Ejecución</label>
+                    </div>
+
+                    <!-- Hora Reintentos -->
+                    <div class="col-md-4 form-floating">
+                        <input type="text" name="hora_reintentos" class="form-control"
+                            id="hora_reintentos" placeholder="hora_reintentos"
+                            value="{{ hora_reintentos }}">
+                        <label for="hora_reintentos">Hora Reintentos</label>
+                    </div>
+
+                    <!-- Nombre Servidor -->
+                    <div class="col-md-4 form-floating">
+                        <input type="text" name="nombre_servidor" class="form-control"
+                            id="nombre_servidor" placeholder="Nombre Servidor"
+                            value="{{ nombre_servidor }}">
+                        <label for="nombre_servidor">Nombre Servidor</label>
+                    </div>
+
+                    <!-- Ubicación Servidor -->
+                    <div class="col-md-4 form-floating">
+                        <input type="text" name="ubicacion_servidor" class="form-control"
+                            id="ubicacion_servidor" placeholder="Ubicación Servidor"
+                            value="{{ ubicacion_servidor }}">
+                        <label for="ubicacion_servidor">Ubicación Servidor</label>
+                    </div>
+
+                    <!-- Fecha Inicio Soporte -->
+                    <div class="col-md-4 form-floating">
+                        <input type="date" name="fecha_inicio_soporte" class="form-control"
+                            id="fecha_inicio_soporte" value="{{ fecha_inicio_soporte }}">
+                        <label for="fecha_inicio_soporte">Fecha Inicio Soporte</label>
+                    </div>
+
+                    <!-- Nombre Contacto -->
+                    <div class="col-md-4 form-floating">
+                        <input type="text" name="nombre_contacto" class="form-control"
+                            id="nombre_contacto" placeholder="Nombre Contacto"
+                            value="{{ nombre_contacto }}">
+                        <label for="nombre_contacto">Nombre Contacto</label>
+                    </div>
+
+                    <!-- Email Contacto -->
+                    <div class="col-md-4 form-floating">
+                        <input type="email" name="email_contacto" class="form-control"
+                            id="email_contacto" placeholder="Email Contacto"
+                            value="{{ email_contacto }}">
+                        <label for="email_contacto">Email Contacto</label>
+                    </div>
+                    <!-- Observaciones -->
+                    <div class="col-md-12 form-floating">
+                        <textarea name="observaciones" class="form-control shadow-sm" id="observaciones"
+                                placeholder="observaciones" style="height: 120px;"></textarea>
+                        <label for="observaciones">Observaciones</label>
+                    </div>
+
+                </div>
+
+                    <div class="mt-4 text-end d-flex justify-content-end gap-2 flex-wrap">
+                        <button class="btn btn-success px-4" type="submit" name="accion" value="guardar">
+                            <i class="bi bi-plus-circle"></i> Guardar Comercio
+                        </button>
+                        <button class="btn btn-outline-success px-4" type="submit" name="accion" value="buscar">
+                            <i class="bi bi-search"></i> Consultar Comercio
+                        </button>
+                    </div>
+            </form>
+
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <small class="text-muted">
+                    Total Comercios: <strong>{{ total_general }}</strong>
+                </small>
+            </div>
+            
+            <!-- Tabla de Comercios -->
+            <h5 class="fw-bold mb-3">Lista de Comercios</h5>
+            <div class="comercio-table-wrapper">
+                <table class="table table-bordered table-striped align-middle text-nowrap mb-0">
+                    <thead class="table-success text-center sticky-header">
+                        <tr>
+                            <th>N°</th>
+                            <th>Nombre</th>
+                            <th>UEN</th>
+                            <th>Estado</th>
+                            <th>Tipo</th>
+                            <th>País</th>
+                            <th>Transformaciones</th>
+                            <th>Periodo Centinela</th>
+                            <th>Hora Centinela</th>
+                            <th>Periodo Ejecución</th>
+                            <th>Hora Ejecución</th>
+                            <th>Hora Reintentos</th>
+                            <th>Nombre Servidor</th>
+                            <th>Ubicación Servidor</th>
+                            <th>Fecha Inicio Soporte</th>
+                            <th>Nombre Contacto</th>
+                            <th>Email Contacto</th>
+                            <th>Observaciones</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in comercios %}
+                        <tr>
+                            <td class="text-center">
+                                {{ start_index|add:forloop.counter0 }}
+                            </td>
+                            <td>{{ c.nombre }}</td>
+                            <td>{{ c.uen }}</td>
+                            <!-- Estado visual -->
+                            <td class="text-center">
+                                {% if c.estado == "Activo" %}
+                                    <span class="badge bg-success">{{ c.estado }}</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ c.estado }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ c.tipo }}</td>
+                            <td>{{ c.pais }}</td>
+                            <td>{{ c.transformaciones }}</td>
+                            <td>{{ c.periodo_centinela }}</td>
+                            <td>{{ c.hora_centinela }}</td>
+                            <td>{{ c.periodo_ejecucion }}</td>
+                            <td>{{ c.hora_ejecucion }}</td>
+                            <td>{{ c.hora_reintentos }}</td>
+                            <td>{{ c.nombre_servidor }}</td>
+                            <td>{{ c.ubicacion_servidor }}</td>
+                            <td>{{ c.fecha_inicio_soporte }}</td>
+                            <td>{{ c.nombre_contacto }}</td>
+                            <td>{{ c.email_contacto }}</td>
+                            <td>
+                                <div class="observaciones-cell">
+                                    {{ c.observaciones|default:"Sin observaciones" }}
+                                </div>
+                            </td>
+
+                            <td class="text-center">
+                                <!-- Editar -->
+                                <button 
+                                    type="button" 
+                                    class="btn btn-sm btn-outline-primary editar-btn" 
+                                    data-id="{{ c.id }}"
+                                    data-nombre="{{ c.nombre }}"
+                                    data-uen="{{ c.uen }}"
+                                    data-estado="{{ c.estado }}"
+                                    data-tipo="{{ c.tipo }}"
+                                    data-pais="{{ c.pais }}"
+                                    data-pais="{{ c.transformaciones }}"
+                                    data-periodo_centinela="{{ c.periodo_centinela }}"
+                                    data-hora_centinela="{{ c.hora_centinela }}"
+                                    data-periodo_ejecucion="{{ c.periodo_ejecucion }}"
+                                    data-hora_ejecucion="{{ c.hora_ejecucion }}"
+                                    data-hora_reintentos="{{ c.hora_reintentos }}"
+                                    data-nombre_servidor="{{ c.nombre_servidor }}"
+                                    data-ubicacion_servidor="{{ c.ubicacion_servidor }}"
+                                    data-fecha_inicio_soporte="{{ c.fecha_inicio_soporte|date:'Y-m-d' }}"
+                                    data-nombre_contacto="{{ c.nombre_contacto }}"
+                                    data-email_contacto="{{ c.email_contacto }}"
+                                    data-observaciones="{{ c.observaciones }}"
+                                    data-bs-toggle="tooltip" title="Editar comercio">
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
+
+                                <!-- Botón para ver Prooveedores Asociados en Prooveedores.html -->
+
+                                <a href="{% url 'proveedores' %}?comercio_id={{ c.id }}"
+                                    class="btn btn-sm btn-outline-success"
+                                    title="Ver proveedores">
+                                    <i class="bi bi-people"></i>
+                                </a>
+
+
+                                <!-- Eliminar con confirmación -->
+                                <a href="{% url 'eliminar_comercio' c.id %}" 
+                                class="btn btn-sm btn-outline-danger eliminar-btn"
+                                data-nombre="{{ c.nombre }}"
+                                data-bs-toggle="tooltip" 
+                                title="Eliminar comercio">
+                                <i class="bi bi-trash"></i>
+                                </a>
+                            </td>
+
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="15" class="text-center">No hay comercios registrados</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <nav aria-label="Paginación">
+                    <ul class="pagination justify-content-center mt-3">
+
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1">«</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">‹</a>
+                            </li>
+                        {% endif %}
+
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% elif num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}">›</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">»</a>
+                            </li>
+                        {% endif %}
+
+                    </ul>
+                </nav>
+
+            </div>
+
+        </div>
+    </div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+    function setValue(selector, value) {
+        const el = document.querySelector(selector);
+        if (el) el.value = value || '';
+    }
+
+    // ======= Cargar datos al editar =======
+    document.querySelectorAll('.editar-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            
+
+            // Cargar valores
+            setValue('input[name="nombre"]', btn.dataset.nombre);
+            setValue('input[name="uen"]', btn.dataset.uen);
+            setValue('#estado', btn.dataset.estado);
+            setValue('#tipo', btn.dataset.tipo);
+            setValue('input[name="pais"]', btn.dataset.pais);
+            setValue('input[name="transformaciones"]', btn.dataset.transformaciones);
+            setValue('input[name="periodo_centinela"]', btn.dataset.periodo_centinela);
+            setValue('input[name="hora_centinela"]', btn.dataset.hora_centinela);
+            setValue('input[name="periodo_ejecucion"]', btn.dataset.periodo_ejecucion);
+            setValue('input[name="hora_ejecucion"]', btn.dataset.hora_ejecucion);
+            setValue('input[name="hora_reintentos"]', btn.dataset.hora_reintentos);
+            setValue('input[name="nombre_servidor"]', btn.dataset.nombre_servidor);
+            setValue('input[name="ubicacion_servidor"]', btn.dataset.ubicacion_servidor);
+            setValue('input[name="estado_soporte"]', btn.dataset.estado_soporte);
+            setValue('input[name="nombre_contacto"]', btn.dataset.nombre_contacto);
+            setValue('input[name="email_contacto"]', btn.dataset.email_contacto);
+            setValue('input[name="observaciones"]', btn.dataset.observaciones);
+
+            // Campo oculto comercio_id
+            let inputId = document.querySelector('input[name="comercio_id"]');
+            if (!inputId) {
+                inputId = document.createElement('input');
+                inputId.type = 'hidden';
+                inputId.name = 'comercio_id';
+                document.querySelector('form').appendChild(inputId);
+            }
+            inputId.value = btn.dataset.id;
+
+            // Cambiar texto del botón principal
+            const boton = document.querySelector('.btn-success');
+            boton.innerHTML = '<i class="bi bi-save"></i> Guardar Cambios';
+        });
+    });
+
+    // ======= Confirmación al eliminar =======
+    document.querySelectorAll('.eliminar-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const nombre = btn.dataset.nombre || 'este comercio';
+            if (!confirm(`¿Está seguro de eliminar el comercio "${nombre}"? Esta acción no se puede deshacer.`)) {
+                e.preventDefault();
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

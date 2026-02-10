@@ -1,0 +1,291 @@
+{% extends 'base.html' %}
+{% block title %}Ruta Entrega{% endblock %}
+
+{% block content %}
+<div class="main-section">
+    <h3 class="mb-4 text-success fw-bold">Configuración Ruta de Entrega</h3>
+
+    <!-- Mensajes -->
+    {% if messages %}
+    <div class="container mt-2">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Formulario -->
+    <form method="POST" action="{% url 'rutas' %}" class="needs-validation" novalidate>
+        {% csrf_token %}
+        <input type="hidden" name="ruta_id" id="ruta_id">
+
+        <div class="row g-4">
+            <!-- Proveedores Asociados -->
+            <div class="col-md-6 form-floating">
+                <select name="proveedor" id="proveedores" class="form-select shadow-sm" required>
+                    <option value="">Seleccione un proveedor...</option>
+                    {% for proveedor in proveedores %}
+                        <option value="{{ proveedor.id }}"
+                            {% if proveedor.id in ruta_entrega_proveedores_ids %}selected{% endif %}>
+                            {{ proveedor.nombre_proveedor }} ({{ proveedor.ean }})
+                        </option>
+                    {% endfor %}
+                </select>
+                <label for="proveedores">Proveedor Asociado</label>
+                <div class="form-text text-muted mt-1">
+                    Selecciona proveedor activo.
+                </div>
+            </div>
+
+            <!-- Nombre del Servidor -->
+            <div class="col-md-4 form-floating">
+                <input type="text" name="nombre_servidor_sftp" id="nombre_servidor_sftp"
+                    class="form-control shadow-sm" placeholder="Servidor" required>
+                <label for="nombre_servidor_sftp">Nombre Servidor SFTP</label>
+            </div>
+
+            <!-- User SFTP -->
+            <div class="col-md-4 form-floating">
+                <input type="text" name="user_sftp" class="form-control shadow-sm" id="user_sftp" placeholder="user_sftp" required>
+                <label for="user_sftp">User SFTP</label>
+            </div>
+
+            <!-- Password SFTP -->
+            <div class="col-md-4 form-floating">
+                <input type="text" name="password_sftp" class="form-control shadow-sm" id="password_sftp" placeholder="password_sftp" required>
+                <label for="password_sftp">Password SFTP</label>
+            </div>
+
+           
+            <!-- Comercios Asociados -->
+            <div class="col-md-6 form-floating">
+                <select name="comercio" id="comercios" class="form-select shadow-sm" required>
+                    <option value="">Seleccione un comercio...</option>
+                    {% for comercio in comercios %}
+                        <option value="{{ comercio.id }}"
+                            {% if comercio.id in ruta_entrega_comercios_ids %}selected{% endif %}>
+                            {{ comercio.nombre }} ({{ comercio.uen }})
+                        </option>
+                    {% endfor %}
+                </select>
+                <label for="comercios">Comercio Asociado</label>
+                <div class="form-text text-muted mt-1">
+                    Selecciona comercio activo.
+                </div>
+            </div>
+
+
+            <!-- Puerto -->
+            <div class="col-md-4 form-floating">
+                <input type="text" name="puerto_sftp" id="puerto_sftp" class="form-control shadow-sm" placeholder="22" required>
+                <label for="puerto_sftp">Puerto SFTP</label>
+            </div>
+
+
+            <!-- Estado -->
+            <div class="col-md-4 form-floating">
+                <select name="estado_sftp" id="estado_sftp" class="form-select shadow-sm" required>
+                    <option value="">Seleccione un estado</option>
+                    <option value="Activo">Activo</option>
+                    <option value="Inactivo">Inactivo</option>
+                </select>
+                <label for="estado_sftp">Estado SFTP</label>
+            </div>
+
+            <!-- Rutas SFTP -->
+            <div class="col-md-4 form-floating">
+                <input type="text" name="ruta_sftp_produccion" class="form-control shadow-sm" id="ruta_sftp_produccion" placeholder="ruta_sftp_produccion" required>
+                <label for="ruta_sftp_produccion">Ruta SFTP Producción</label>
+            </div>
+
+            <div class="col-md-4 form-floating">
+                <input type="text" name="ruta_sftp_pruebas" class="form-control shadow-sm" id="ruta_sftp_pruebas" placeholder="ruta_sftp_pruebas" required>
+                <label for="ruta_sftp_pruebas">Ruta SFTP Pruebas</label>
+            </div>
+        </div>
+
+        <div class="mt-4 text-end d-flex justify-content-end gap-2 flex-wrap">
+            <button class="btn btn-success px-4" type="submit" name="accion" value="guardar">
+                <i class="bi bi-save"></i> Guardar Ruta
+            </button>
+            <button class="btn btn-outline-success px-4" type="submit" name="accion" value="buscar">
+                <i class="bi bi-search"></i> Consultar Ruta
+            </button>
+        </div>
+    </form>
+
+    <!-- === LISTA DE RUTAS === -->
+    <h5 class="fw-bold mb-3 mt-5">Lista de Rutas</h5>
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped align-middle text-nowrap">
+            <thead class="table-success text-center">
+                <tr>
+                    <th>Proveedor</th>
+                    <th>Servidor SFTP</th>
+                    <th>Usuario</th>
+                    <th>Password</th>
+                    <th>Puerto</th>
+                    <th>Estado</th>
+                    <th>Comercios</th>
+                    <th>Ruta Producción</th>
+                    <th>Ruta Pruebas</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in rutas %}
+                <tr>
+                    <!-- Proveedores Asociados -->
+                    <td>
+                        {% if r.proveedores.exists %}
+                            {% for p in r.proveedores.all %}
+                                <span class="badge bg-light border text-secondary">{{ p.nombre_proveedor }}</span>
+                            {% endfor %}
+                        {% else %}
+                            <span class="text-muted">Sin proveedores</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ r.nombre_servidor_sftp }}</td>
+                    <td>{{ r.user_sftp }}</td>
+
+                    <td>
+                        {% if r.password_sftp %}
+                            <span class="text-muted">••••••••</span>
+                        {% else %}
+                            <span class="text-danger">No configurada</span>
+                        {% endif %}
+                    </td>
+                    
+                    <td>{{ r.puerto_sftp }}</td>
+
+                    <!-- Estado visual -->
+                    <td class="text-center">
+                        {% if r.estado_sftp == "Activo" %}
+                                    <span class="badge bg-success">{{ r.estado_sftp }}</span>
+                            {% else %}
+                                    <span class="badge bg-secondary">{{ r.estado_sftp }}</span>
+                        {% endif %}
+                    </td>
+                                       
+                    <!-- Comercios Asociados -->
+                    <td>
+                        {% if r.comercios.exists %}
+                            {% for comercio in r.comercios.all %}
+                                <span class="badge bg-primary me-1">
+                                    {{ comercio.nombre }}
+                                </span>
+                            {% endfor %}
+                        {% else %}
+                            <span class="text-muted">Sin comercios</span>
+                        {% endif %}
+                    </td>
+
+                    <!-- Ruta Producción -->
+                    <td>{{ r.ruta_sftp_produccion }}</td>
+
+                    <!-- Ruta Pruebas -->
+                    <td>{{ r.ruta_sftp_pruebas }}</td>
+
+                    <td class="text-center">
+
+                                <!-- Botón Editar (Ruta de Entrega) -->
+                                <button 
+                                    type="button" 
+                                    class="btn btn-sm btn-outline-primary editar-btn"
+                                    data-id="{{ r.id }}"
+                                    data-nombre_servidor_sftp="{{ r.nombre_servidor_sftp|default_if_none:''|escape }}"
+                                    data-user_sftp="{{ r.user_sftp|default_if_none:''|escape }}"
+                                    data-password_sftp="{{ r.password_sftp|default_if_none:''|escape }}"
+                                    data-puerto_sftp="{{ r.puerto_sftp|default_if_none:'' }}"
+                                    data-estado_sftp="{{ r.estado_sftp|default_if_none:''|escape }}"
+                                    data-ruta_sftp_produccion="{{ r.ruta_sftp_produccion|default_if_none:''|escape }}"
+                                    data-ruta_sftp_pruebas="{{ r.ruta_sftp_pruebas|default_if_none:''|escape }}"
+                                    data-comercio-id="{% if r.comercios.exists %}{{ r.comercios.first.id }}{% endif %}"
+                                    data-proveedor-id="{% if r.proveedores.exists %}{{ r.proveedores.first.id }}{% endif %}"
+                                    data-bs-toggle="tooltip" 
+                                    title="Editar Ruta de Entrega">
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
+
+                                <!-- Botón para ver Prooveedores Asociados en Prooveedores.html -->
+
+                                <!-- Botón para ver Proveedores Asociados -->
+                                <a href="{% url 'proveedores' %}?ruta_id={{ r.id }}"
+                                    class="btn btn-sm btn-outline-success"
+                                    title="Ver proveedor">
+                                     <i class="bi bi-people"></i>
+                                </a>
+
+                                <!-- Eliminar con confirmación -->
+                                <a href="{% url 'eliminar_rutas' r.id %}" 
+                                    class="btn btn-sm btn-outline-danger eliminar-btn"
+                                    onclick="return confirm('¿Estás seguro de que deseas eliminar esta ruta?');"
+                                    data-nombre="{{ r.nombre_servidor_sftp }}"
+                                    data-bs-toggle="tooltip"
+                                    title="Eliminar ruta">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+
+                            </td>
+
+                </tr>
+                {% empty %}
+                <tr><td colspan="9" class="text-center text-muted">No hay rutas registradas</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- === SCRIPT === -->
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // --- Cargar datos de rutas directamente del backend ---
+    const rutasData = {{ rutas_data|safe }};
+
+    document.querySelectorAll('.editar-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const form = document.querySelector('form');
+            const rutaId = parseInt(btn.dataset.id);
+            const ruta = rutasData.find(r => r.id === rutaId);
+            if (!ruta) return;
+
+            // --- Asignar valores al formulario ---
+            form.querySelector('#ruta_id').value = ruta.id;
+            form.querySelector('#nombre_servidor_sftp').value = ruta.nombre_servidor_sftp || '';
+            form.querySelector('#user_sftp').value = ruta.user_sftp || '';
+            form.querySelector('#password_sftp').value = ruta.password_sftp || '';
+            form.querySelector('#puerto_sftp').value = ruta.puerto_sftp || '';
+            form.querySelector('#estado_sftp').value = ruta.estado_sftp || '';
+            form.querySelector('#ruta_sftp_produccion').value = ruta.ruta_sftp_produccion || '';
+            form.querySelector('#ruta_sftp_pruebas').value = ruta.ruta_sftp_pruebas || '';
+
+            // --- Seleccionar Comercios ---
+            const selectC = form.querySelector('#comercios');
+            if (selectC) {
+                Array.from(selectC.options).forEach(opt => {
+                    opt.selected = ruta.comercios_ids.includes(parseInt(opt.value));
+                });
+            }
+
+            // --- Seleccionar Proveedores ---
+            const selectP = form.querySelector('#proveedores');
+            if (selectP) {
+                Array.from(selectP.options).forEach(opt => {
+                    opt.selected = ruta.proveedores_ids.includes(parseInt(opt.value));
+                });
+            }
+
+            // --- Cambiar texto del botón principal ---
+            const boton = document.querySelector('.btn-success');
+            if (boton) boton.innerHTML = '<i class="bi bi-save"></i> Guardar Cambios';
+        });
+    });
+});
+</script>
+{% endblock %}
+

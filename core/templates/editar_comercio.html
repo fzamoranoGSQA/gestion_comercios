@@ -1,0 +1,33 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar Comercio</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="p-4">
+    <h3>Editar Comercio: {{ comercio.nombre }}</h3>
+    <form method="post">
+        {% csrf_token %}
+        <div class="row">
+            <div class="col-md-4 mb-2"><input name="nombre" class="form-control" value="{{ comercio.nombre }}" required></div>
+            <div class="col-md-4 mb-2"><input name="uen" class="form-control" value="{{ comercio.uen }}"></div>
+            <div class="col-md-4 mb-2">
+                <select name="estado" class="form-select">
+                    <option value="Activo" {% if comercio.estado == "Activo" %}selected{% endif %}>Activo</option>
+                    <option value="Inactivo" {% if comercio.estado == "Inactivo" %}selected{% endif %}>Inactivo</option>
+                </select>
+            </div>
+            <div class="col-md-4 mb-2">
+                <select name="tipo" class="form-select">
+                    <option value="Nuevo" {% if comercio.tipo == "Nuevo" %}selected{% endif %}>Nuevo</option>
+                    <option value="Migración" {% if comercio.tipo == "Migración" %}selected{% endif %}>Migración</option>
+                </select>
+            </div>
+        </div>
+        <button class="btn btn-success">Guardar Cambios</button>
+        <a href="{% url 'dashboard' %}" class="btn btn-secondary">Cancelar</a>
+    </form>
+</body>
+</html>

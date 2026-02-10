@@ -1,0 +1,45 @@
+# =========================
+# PYTHON
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+
+# =========================
+# DJANGO
+# =========================
+.env
+.env.*
+*.log
+staticfiles/
+media/
+
+# Migraciones (NO borrar, solo cache)
+**/migrations/__pycache__/
+
+# =========================
+# POSTGRESQL
+# =========================
+*.sql
+*.dump
+*.backup
+
+# =========================
+# VIRTUAL ENV
+# =========================
+venv/
+env/
+.venv/
+
+# =========================
+# IDE / EDITORES
+# =========================
+.vscode/
+.idea/
+*.swp
+
+# =========================
+# SISTEMA OPERATIVO
+# =========================
+.DS_Store
+Thumbs.db

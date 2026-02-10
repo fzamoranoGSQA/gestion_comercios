@@ -1,0 +1,457 @@
+{%  extends "base.html" %}
+{% block title %}Gestión Proveedores{% endblock %}
+
+{% block content %}
+<div class="ma%}in-section">
+
+    <h3 class="mb-4 text-success fw-bold">Gestión de Proveedores</h3>
+
+
+        <!-- Mensajes -->
+        {% if messages %}
+        <div class="container mt-2">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Formulario -->
+        <form method="POST" action="{% url 'proveedores' %}" class="needs-validation" novalidate>
+            {% csrf_token %}
+            <input type="hidden" name="proveedor_id" id="proveedor_id"
+                    value="{{ proveedor_editar.id|default:'' }}">
+
+            <div class="row g-4">
+                <!-- Nombre del Proveedor -->
+                <div class="col-md-4 form-floating">
+                    <input type="text" name="nombre_proveedor" class="form-control shadow-sm" id="nombre_proveedor"
+                        placeholder="Nombre proveedor" required>
+                    <label for="nombre_proveedor">Nombre Proveedor</label>
+                </div>
+
+                <!-- EAN -->
+                <div class="col-md-4 form-floating">
+                    <input type="text" name="ean" class="form-control shadow-sm" id="ean" placeholder="EAN" required>
+                    <label for="ean">EAN Proveedor</label>
+                </div>
+
+                <!-- Comercios Asociados -->
+                <div class="col-md-4 form-floating">
+                    <select name="comercios" id="comercios" class="form-select shadow-sm" multiple required>
+                        {% for comercio in comercios %}
+                        <option value="{{ comercio.id }}" {% if comercio.id in proveedor_comercios_ids %}selected{% endif %}>
+                            {{ comercio.nombre }} ({{ comercio.uen }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <div class="form-text text-muted mt-1">
+                        Puedes ubicar y seleccionar múltiples comercios activos.
+                    </div>
+                </div>
+
+                <!-- Periodo Ejecución -->
+                <div class="col-md-4 form-floating">
+                    <input type="text" name="periodo_ejecucion" class="form-control shadow-sm" id="periodo_ejecucion"
+                        placeholder="Periodo Ejecución" required>
+                    <label for="periodo_ejecucion">Periodo Ejecución Personalizado</label>
+                </div>
+
+                <!-- Hora Ejecución -->
+                <div class="col-md-4 form-floating">
+                    <input type="text" name="hora_ejecucion" class="form-control shadow-sm" id="hora_ejecucion"
+                        placeholder="Hora Ejecución" value="{{ proveedor_editar.hora_ejecucion|default:'' }}">
+                    <label for="hora_ejecucion">Hora Ejecución Personalizado</label>
+                </div>
+
+                <!-- Hora Reintentos -->
+                <div class="col-md-4 form-floating">
+                    <input type="text" name="hora_reintentos" class="form-control shadow-sm" id="hora_reintentos"
+                        placeholder="Hora Reintentos" value="{{ hora_reintentos }}">
+                    <label for="hora_reintentos">Horas Reintentos Personalizado</label>
+                </div>
+
+                <!-- Estados por Comercio -->
+                <div class="col-md-12">
+                    <label class="form-label fw-semibold">
+                        Estado del Proveedor por Comercio
+                    </label>
+
+                    <div id="estados-por-comercio" class="row g-2">
+                        <small class="text-muted">
+                            Seleccione primero los comercios
+                        </small>
+                    </div>
+                </div>
+
+
+                <!-- Documentos Descarga -->
+                <div class="col-md-4 form-floating">
+                    <select name="documentos_descarga" class="form-select shadow-sm" id="documentos_descarga">
+                        <option value="" disabled {% if not tipo %}selected{% endif %}>Seleccione documentos</option>
+                        <option value="Ventas e Inventarios">Ventas e Inventarios</option>
+                        <option value="Ordenes de Compra">Ordenes de Compra</option>
+                        <option value="Ventas Inventarios/Ordenes de Compra">Ventas Inventarios/Ordenes de Compra</option>
+                    </select>
+                    <label for="documentos_descarga">Documentos Descarga</label>
+                </div>
+
+                <!-- Tipo Ejecución -->
+                <div class="col-md-4 form-floating">
+                    <select name="tipo_ejecucion" class="form-select shadow-sm" id="tipo_ejecucion">
+                        <option value="" disabled {% if not tipo %}selected{% endif %}>Seleccione Tipo</option>
+                        <option value="Serie">Serie</option>
+                        <option value="Paralelo">Paralelo</option>
+                    </select>
+                    <label for="tipo_ejecucion">Tipo Ejecución</label>
+                </div>
+
+                <!-- Cantidad Conexiones -->
+                <div class="col-md-4 form-floating">
+                    <input type="text" name="cantidad_conexiones" class="form-control shadow-sm" id="cantidad_conexiones"
+                        placeholder="Cantidad Conexiones" value="{{ cantidad_conexiones }}">
+                    <label for="hora_reintentos">Cantidad de Conexiones</label>
+                </div>
+
+                <!-- Observaciones -->
+                <div class="col-md-12 form-floating">
+                    <textarea name="observaciones" class="form-control shadow-sm" id="observaciones"
+                            placeholder="Observaciones" style="height: 120px;"></textarea>
+                    <label for="observaciones">Observaciones</label>
+                </div>
+            </div>
+
+            <!-- Botones -->
+            <div class="mt-4 d-flex justify-content-end gap-2 flex-wrap">
+                <button class="btn btn-success px-4" type="submit" name="accion" value="guardar">
+                    <i class="bi bi-save"></i> Guardar Proveedor
+                </button>
+                <button class="btn btn-outline-success px-4" type="submit" name="accion" value="buscar">
+                    <i class="bi bi-search"></i> Consultar Proveedor
+                </button>
+            </div>
+        </form>
+        <br></br>
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <small class="text-muted">
+                Total Proveedores: <strong>{{ total_general }}</strong>
+            </small>
+
+            <small class="text-muted">
+                Total Conexiones Proveedores "Tope 468":
+                <strong class="text-success">
+                    {{ total_conexiones }}
+                </strong>
+            </small>
+        </div>
+                
+            <!-- === GRILLA DE PROVEEDORES === -->
+            <h5 class="fw-bold mb-3 mt-5">Lista de Proveedores</h5>
+
+            <!-- 🔽 Scroll SOLO para la tabla -->
+            <div class="table-responsive table-scroll-vertical">
+                <table class="table table-bordered table-striped align-middle text-nowrap mb-0">
+                    <thead class="table-success text-center">
+                        <tr>
+                            <th>N°</th>
+                            <th>Nombre</th>
+                            <th>EAN</th>
+                            <th>Estado</th>
+                            <th>Documentos Descarga</th>
+                            <th>Periodo Ejecución</th>
+                            <th>Hora Ejecución</th>
+                            <th>Hora Reintentos</th>
+                            <th>Tipo Ejecución</th>
+                            <th>Cantidad Conexiones</th>
+                            <th>Comercios Asociados</th>
+                            <th>Observaciones</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for p in proveedores %}
+                        <tr>
+                            <td class="text-center">
+                                {{ start_index|add:forloop.counter0 }}
+                            </td>
+
+                            <td>{{ p.nombre_proveedor }}</td>
+                            <td>{{ p.ean }}</td>
+
+                            <!-- Estado -->
+                            <td>
+                                {% for pc in p.proveedor_comercios.all %}
+                                    <span class="badge rounded-pill me-1 mb-1
+                                        {% if pc.estado == 'Activo' %} bg-success
+                                        {% elif pc.estado == 'Suspendido' %} bg-warning text-dark
+                                        {% elif pc.estado == 'Inactivo' %} bg-danger
+                                        {% else %} bg-secondary
+                                        {% endif %}
+                                    ">
+                                        {{ pc.comercio.nombre }} · {{ pc.estado }}
+                                    </span>
+                                {% empty %}
+                                    <span class="text-muted fst-italic">Sin Estado</span>
+                                {% endfor %}
+                            </td>
+
+                            <td>{{ p.documentos_descarga }}</td>
+                            <td>{{ p.periodo_ejecucion }}</td>
+                            <td>{{ p.hora_ejecucion }}</td>
+                            <td>{{ p.hora_reintentos }}</td>
+                            <td>{{ p.tipo_ejecucion }}</td>
+                            <td class="text-center">{{ p.cantidad_conexiones }}</td>
+
+                            <td>
+                                {% for comercio in p.comercios.all %}
+                                    <span class="badge bg-primary me-1">
+                                        {{ comercio.nombre }}
+                                    </span>
+                                {% empty %}
+                                    <span class="text-muted">Sin comercios</span>
+                                {% endfor %}
+                            </td>
+
+
+                            <!-- Observaciones -->
+                            <td>
+                                <div class="observaciones-cell">
+                                    {{ p.observaciones|default:"Sin observaciones" }}
+                                </div>
+                            </td>
+
+                            <!-- Acciones -->
+                            <td class="text-center">
+                                <button 
+                                    type="button"
+                                    class="btn btn-sm btn-outline-primary editar-btn"
+                                    data-id="{{ p.id }}"
+                                    data-nombre_proveedor="{{ p.nombre_proveedor|escape }}"
+                                    data-ean="{{ p.ean|escape }}"
+                                    data-documentos_descarga="{{ p.documentos_descarga|default_if_none:''|escape }}"
+                                    data-periodo_ejecucion="{{ p.periodo_ejecucion|default_if_none:''|escape }}"
+                                    data-hora_ejecucion="{{ p.hora_ejecucion|default_if_none:''|escape }}"
+                                    data-hora_reintentos="{{ p.hora_reintentos|default_if_none:''|escape }}"
+                                    data-tipo_ejecucion="{{ p.tipo_ejecucion|default_if_none:''|escape }}"
+                                    data-cantidad_conexiones="{{ p.cantidad_conexiones|default_if_none:'' }}"
+                                    data-observaciones="{{ p.observaciones|default_if_none:''|escape }}"
+                                    title="Editar proveedor">
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
+
+                                {% if p.comercios.all %}
+                                <a href="{% url 'dashboard' %}?comercios={% for c in p.comercios.all %}{{ c.id }}{% if not forloop.last %},{% endif %}{% endfor %}"
+                                class="btn btn-sm btn-outline-success"
+                                title="Ver comercios">
+                                    <i class="bi bi-building"></i>
+                                </a>
+                                {% endif %}
+
+                                <a href="{% url 'eliminar_proveedor' p.id %}"
+                                class="btn btn-sm btn-outline-danger"
+                                onclick="return confirm('¿Estás seguro de que deseas eliminar este proveedor?');"
+                                title="Eliminar proveedor">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="13" class="text-center text-muted">
+                                No hay proveedores registrados
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 🔽 PAGINACIÓN FUERA DEL SCROLL (NO SE PIERDE) -->
+            {% if page_obj.has_other_pages %}
+            <nav class="fw-bold mb-3">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">«</a>
+                    </li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% elif num > page_obj.number|add:-3 and num < page_obj.number|add:3 %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">»</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+
+            </div>
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+            <!-- === SCRIPT FINAL === -->
+            <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                // Inicializar tooltips
+                const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                tooltipTriggerList.map(el => new bootstrap.Tooltip(el));
+
+                // Acción Editar proveedor
+                document.querySelectorAll('.editar-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const form = document.querySelector('form');
+
+                        // Simple fields
+                        form.querySelector('#proveedor_id').value = btn.dataset.id || '';
+                        form.querySelector('#nombre_proveedor').value = btn.dataset.nombre_proveedor || '';
+                        form.querySelector('#ean').value = btn.dataset.ean || '';
+                        form.querySelector('#estado').value = btn.dataset.estado || '';
+                        form.querySelector('#documentos_descarga').value = btn.dataset.documentos_descarga || '';
+                        form.querySelector('#periodo_ejecucion').value = btn.dataset.periodo_ejecucion || '';
+                        form.querySelector('#hora_ejecucion').value = btn.dataset.hora_ejecucion || '';
+                        form.querySelector('#hora_reintentos').value = btn.dataset.hora_reintentos || '';
+                        form.querySelector('#tipo_ejecucion').value = btn.dataset.tipo_ejecucion || '';
+                        form.querySelector('#cantidad_conexiones').value = btn.dataset.cantidad_conexiones || '';
+                        form.querySelector('#observaciones').value = btn.dataset.observaciones || '';
+
+                        // Buscar los comercios asociados en el JSON usando el id del proveedor
+                        const proveedorId = parseInt(btn.dataset.comerciosId || btn.dataset.id, 10);
+                        const proveedorInfo = proveedoresData.find(p => p.id === proveedorId);
+                        const comerciosSeleccionados = proveedorInfo ? proveedorInfo.comercios_ids.map(String) : [];
+
+                        // Aplicar selección al select múltiple (compatible con Select2)
+                        if (typeof $ !== 'undefined' && $.fn && $.fn.select2) {
+                            $('#comercios').val(comerciosSeleccionados).trigger('change');
+                        } else {
+                            // fallback nativo: marcar opciones manualmente
+                            const select = document.querySelector('#comercios');
+                            if (select) {
+                                Array.from(select.options).forEach(opt => {
+                                    opt.selected = comerciosSeleccionados.includes(opt.value);
+                                });
+                            }
+                        }
+
+                        // Cambiar texto del botón principal
+                        const boton = document.querySelector('.btn-success');
+                        if (boton) boton.innerHTML = '<i class="bi bi-save"></i> Guardar Cambios';
+
+                        // Enfocar primer campo
+                        const first = form.querySelector('#nombre_proveedor');
+                        if (first) first.focus();
+                    });
+                });
+            });
+            </script>
+            
+            <script>
+            document.addEventListener("DOMContentLoaded", function () {
+
+                document.querySelectorAll(".editar-btn").forEach(btn => {
+                    btn.addEventListener("click", function () {
+
+                        // ID oculto
+                        document.getElementById("proveedor_id").value = this.dataset.id || "";
+
+                        // Inputs
+                        document.getElementById("nombre_proveedor").value = this.dataset.nombre_proveedor || "";
+                        document.getElementById("ean").value = this.dataset.ean || "";
+                        document.getElementById("periodo_ejecucion").value = this.dataset.periodo_ejecucion || "";
+                        document.getElementById("hora_ejecucion").value = this.dataset.hora_ejecucion || "";
+                        document.getElementById("hora_reintentos").value = this.dataset.hora_reintentos || "";
+                        document.getElementById("cantidad_conexiones").value = this.dataset.cantidad_conexiones || "";
+                        document.getElementById("observaciones").value = this.dataset.observaciones || "";
+
+                        // Selects
+                        if (this.dataset.documentos_descarga) {
+                            document.getElementById("documentos_descarga").value = this.dataset.documentos_descarga;
+                        }
+
+                        if (this.dataset.tipo_ejecucion) {
+                            document.getElementById("tipo_ejecucion").value = this.dataset.tipo_ejecucion;
+                        }
+
+                    });
+                });
+
+            });
+            </script>
+            <script>
+            document.addEventListener("DOMContentLoaded", function () {
+
+                const comerciosSelect = document.getElementById("comercios");
+                const contenedorEstados = document.getElementById("estados-por-comercio");
+
+                if (!comerciosSelect || !contenedorEstados) return;
+
+                function renderEstadosPorComercio() {
+                    contenedorEstados.innerHTML = "";
+
+                    const seleccionados = Array.from(comerciosSelect.selectedOptions);
+
+                    if (!seleccionados.length) {
+                        contenedorEstados.innerHTML = `
+                            <small class="text-muted">
+                                Seleccione primero los comercios
+                            </small>
+                        `;
+                        return;
+                    }
+
+                    seleccionados.forEach(opt => {
+                        const comercioId = opt.value;
+                        const comercioNombre = opt.text;
+
+                        const col = document.createElement("div");
+                        col.className = "col-md-4";
+
+                        col.innerHTML = `
+                            <div class="form-floating">
+                                <select name="estado_comercio[${comercioId}]"
+                                        class="form-select shadow-sm"
+                                        required>
+                                    <option value="">Seleccione estado</option>
+                                    <option value="Activo">Activo</option>
+                                    <option value="Suspendido">Suspendido</option>
+                                    <option value="Inactivo">Inactivo</option>
+                                </select>
+                                <label>${comercioNombre}</label>
+                            </div>
+                        `;
+
+                        contenedorEstados.appendChild(col);
+                    });
+                }
+
+                // 🔹 Al cambiar comercios manualmente
+                comerciosSelect.addEventListener("change", renderEstadosPorComercio);
+
+                // 🔹 Forzar render cuando se editan proveedores
+                document.querySelectorAll(".editar-btn").forEach(btn => {
+                    btn.addEventListener("click", () => {
+                        setTimeout(renderEstadosPorComercio, 100);
+                    });
+                });
+
+            });
+            </script>
+
+
+
+
+{% endblock %}

@@ -1,0 +1,285 @@
+{% extends 'base.html' %}
+{% block title %}Datos Servidor{% endblock %}
+
+{% block content %}
+<div class="main-section">
+    <h3 class="mb-4 text-success fw-bold">Configuración de Servidores RPA</h3>
+
+    <!-- Mensajes -->
+    {% if messages %}
+    <div class="container mt-2">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- ================== FORMULARIO SERVIDOR RPA ================== -->
+<form method="POST"
+      action="{% url 'datos_servidor' %}"
+      class="needs-validation"
+      novalidate>
+
+    {% csrf_token %}
+
+    <!-- ID oculto para edición -->
+    <input type="hidden" name="accion" value="guardar">
+    <input type="hidden" name="servidor_id" id="servidor_id">
+
+    <div class="row g-4">
+
+        <!-- Nombre Servidor -->
+        <div class="col-md-4 form-floating">
+            <input type="text"
+                   name="nombre_servidor_rpa"
+                   id="nombre_servidor_rpa"
+                   class="form-control shadow-sm"
+                   placeholder="Servidor RPA"
+                   required>
+            <label for="nombre_servidor_rpa">Nombre Servidor RPA</label>
+        </div>
+
+        <!-- IP Servidor -->
+        <div class="col-md-4 form-floating">
+            <input type="text"
+                   name="ip_servidor_rpa"
+                   id="ip_servidor_rpa"
+                   class="form-control shadow-sm"
+                   placeholder="IP del servidor"
+                   required>
+            <label for="ip_servidor_rpa">IP Servidor RPA</label>
+        </div>
+
+        <!-- Usuario -->
+        <div class="col-md-4 form-floating">
+            <input type="text"
+                   name="user_rpa"
+                   id="user_rpa"
+                   class="form-control shadow-sm"
+                   placeholder="Usuario del servidor"
+                   autocomplete="off"
+                   required>
+            <label for="user_rpa">Usuario Servidor</label>
+        </div>
+
+        <!-- Password -->
+        <div class="col-md-4 form-floating">
+            <input type="password"
+                   name="password_rpa"
+                   id="password_rpa"
+                   class="form-control shadow-sm"
+                   placeholder="Ingrese nueva contraseña"
+                   autocomplete="new-password">
+            <label for="password_rpa">Password RPA</label>
+            <div class="form-text text-muted">
+                Dejar en blanco para mantener la contraseña actual.
+            </div>
+        </div>
+
+        <!-- Puerto -->
+        <div class="col-md-4 form-floating">
+            <input type="number"
+                   name="puerto_rpa"
+                   id="puerto_rpa"
+                   class="form-control shadow-sm"
+                   placeholder="Puerto"
+                   required>
+            <label for="puerto_rpa">Puerto RPA</label>
+        </div>
+        
+        <!-- País -->
+        <div class="col-md-4 form-floating">
+            <input type="text"
+                   name="pais_rpa"
+                   id="pais_rpa"
+                   class="form-control shadow-sm"
+                   placeholder="País del servidor"
+                   required>
+            <label for="pais_rpa">País Servidor</label>
+        </div>
+
+        <!-- Estado -->
+        <div class="col-md-4 form-floating">
+            <select name="estado_rpa"
+                    id="estado_rpa"
+                    class="form-select shadow-sm"
+                    required>
+                <option value="">Seleccione un estado</option>
+                <option value="Activo">Activo</option>
+                <option value="Inactivo">Inactivo</option>
+            </select>
+            <label for="estado_rpa">Estado Servidor</label>
+        </div>
+
+        <!-- Comercios -->
+        <div class="col-md-6 form-floating">
+            <select name="comercios"
+                    id="comercios"
+                    class="form-select shadow-sm"
+                    multiple
+                    required>
+                {% for comercio in comercios %}
+                    <option value="{{ comercio.id }}">
+                        {{ comercio.nombre }} ({{ comercio.uen }})
+                    </option>
+                {% endfor %}
+            </select>
+            <div class="form-text text-muted mt-1">
+                Puedes seleccionar uno o más comercios activos.
+            </div>
+        </div>
+
+        <!-- === BOTONES === -->
+        <div class="mt-4 text-end d-flex justify-content-end gap-2 flex-wrap">
+            <button class="btn btn-success px-4" type="submit" name="accion" value="guardar">
+                <i class="bi bi-save"></i> Guardar Servidor
+            </button>
+            <button class="btn btn-outline-success px-4" type="submit" name="accion" value="buscar">
+                <i class="bi bi-search"></i> Consultar Servidor
+            </button>
+        </div>
+    </form>
+
+    <!-- === LISTA DE SERVIDORES === -->
+<h5 class="fw-bold mb-3 mt-5">Lista de Servidores</h5>
+<div class="table-responsive">
+    <table class="table table-bordered table-striped align-middle text-nowrap">
+        <thead class="table-success text-center">
+            <tr>
+                <th>Servidor</th>
+                <th>IP</th>
+                <th>Usuario</th>
+                <th>Password</th>
+                <th>Puerto</th>
+                <th>País</th>
+                <th>Estado</th>
+                <th>Comercios Asociados</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in servidores %}
+            <tr>
+                <td>{{ s.nombre_servidor_rpa }}</td>
+                <td>{{ s.ip_servidor_rpa }}</td>
+                <td>{{ s.user_rpa }}</td>
+                <td>
+                    {% if s.password_rpa %}
+                        <span class="text-muted">••••••••</span>
+                    {% else %}
+                        <span class="text-danger">No configurada</span>
+                    {% endif %}
+                </td>
+
+                <td>{{ s.puerto_rpa }}</td>
+                <td>{{ s.pais_rpa }}</td>
+
+                <!-- Estado visual -->
+                <td class="text-center">
+                    {% if s.estado_rpa == "Activo" %}
+                        <span class="badge bg-success">{{ s.estado_rpa }}</span>
+                    {% else %}
+                        <span class="badge bg-secondary">{{ s.estado_rpa }}</span>
+                    {% endif %}
+                </td>
+
+                <!-- Comercios asociados -->
+                <td>
+                    {% if s.comercios.exists %}
+                        {% for c in s.comercios.all %}
+                            <span class="badge bg-primary me-1">
+                                {{ c.nombre }}
+                            </span>
+                        {% endfor %}
+                    {% else %}
+                        <span class="text-muted">Sin comercios</span>
+                    {% endif %}
+                </td>
+
+
+                <!-- Acciones -->
+                <td class="text-center">
+                    <button type="button" 
+                        class="btn btn-sm btn-outline-primary editar-btn"
+                        data-id="{{ s.id }}"
+                        data-nombre_servidor_rpa="{{ s.nombre_servidor_rpa|default_if_none:''|escape }}"
+                        data-ip_servidor_rpa="{{ s.ip_servidor_rpa|default_if_none:''|escape }}"
+                        data-user_rpa="{{ s.user_rpa|default_if_none:''|escape }}"
+                        data-password_rpa="••••••••"
+                        data-cantidad_rpa="{{ s.cantidad_rpa|default_if_none:''|escape }}"
+                        data-puerto_rpa="{{ s.puerto_rpa|default_if_none:''|escape }}"
+                        data-pais_rpa="{{ s.pais_rpa|default_if_none:''|escape }}"
+                        data-estado_rpa="{{ s.estado_rpa|default_if_none:''|escape }}"
+                        title="Editar Servidor">
+                        <i class="bi bi-pencil-square"></i>
+                    </button>
+
+                    {% if s.comercios.exists %}
+                    <a href="{% url 'dashboard' %}?comercios={% for c in s.comercios.all %}{{ c.id }}{% if not forloop.last %},{% endif %}{% endfor %}" 
+                        class="btn btn-sm btn-outline-success"
+                        data-bs-toggle="tooltip"
+                        title="Ver Comercios Asociados">
+                        <i class="bi bi-building"></i>
+                    </a>
+                    {% endif %}
+
+                    <a href="{% url 'eliminar_servidor' s.id %}" 
+                        class="btn btn-sm btn-outline-danger"
+                        onclick="return confirm('¿Estás seguro de que deseas eliminar este servidor?');"
+                        title="Eliminar Servidor">
+                        <i class="bi bi-trash"></i>
+                    </a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="10" class="text-center text-muted">No hay servidores registrados</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+
+<!-- === SCRIPT === -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const servidoresData = {{ servidores_data|safe }};
+
+    document.querySelectorAll('.editar-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const id = parseInt(btn.dataset.id);
+            const servidor = servidoresData.find(s => s.id === id);
+            if (!servidor) return;
+
+            const form = document.querySelector('form');
+
+            form.querySelector('#servidor_id').value = servidor.id;
+            form.querySelector('#nombre_servidor_rpa').value = servidor.nombre_servidor_rpa || '';
+            form.querySelector('#ip_servidor_rpa').value = servidor.ip_servidor_rpa || '';
+            form.querySelector('#user_rpa').value = servidor.user_rpa || '';
+            form.querySelector('#puerto_rpa').value = servidor.puerto_rpa || '';
+            form.querySelector('#pais_rpa').value = servidor.pais_rpa || '';
+            form.querySelector('#estado_rpa').value = servidor.estado_rpa || '';
+
+            // 🔐 Password SIEMPRE vacío al editar
+            form.querySelector('#password_rpa').value = '';
+
+            // ✅ Marcar comercios asociados
+            const select = form.querySelector('#comercios');
+            Array.from(select.options).forEach(opt => {
+                opt.selected = servidor.comercios_ids.includes(parseInt(opt.value));
+            });
+
+            // UX
+            const boton = form.querySelector('.btn-success');
+            if (boton) {
+                boton.innerHTML = '<i class="bi bi-save"></i> Guardar Cambios';
+            }
+        });
+    });
+});
+</script>
+
+{% endblock %}
