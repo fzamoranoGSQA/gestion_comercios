@@ -117,127 +117,188 @@
         </div>
     </form>
 
+    
     <!-- === LISTA DE RUTAS === -->
-    <h5 class="fw-bold mb-3 mt-5">Lista de Rutas</h5>
-    <div class="table-responsive">
-        <table class="table table-bordered table-striped align-middle text-nowrap">
-            <thead class="table-success text-center">
-                <tr>
-                    <th>Proveedor</th>
-                    <th>Servidor SFTP</th>
-                    <th>Usuario</th>
-                    <th>Password</th>
-                    <th>Puerto</th>
-                    <th>Estado</th>
-                    <th>Comercios</th>
-                    <th>Ruta Producción</th>
-                    <th>Ruta Pruebas</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for r in rutas %}
-                <tr>
-                    <!-- Proveedores Asociados -->
-                    <td>
-                        {% if r.proveedores.exists %}
-                            {% for p in r.proveedores.all %}
-                                <span class="badge bg-light border text-secondary">{{ p.nombre_proveedor }}</span>
-                            {% endfor %}
-                        {% else %}
-                            <span class="text-muted">Sin proveedores</span>
-                        {% endif %}
-                    </td>
-                    <td>{{ r.nombre_servidor_sftp }}</td>
-                    <td>{{ r.user_sftp }}</td>
+    <!-- CONTADOR -->
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <small class="text-muted">
+        Total Rutas: <strong>{{ total_rutas }}</strong>
+    </small>
+</div>
 
-                    <td>
-                        {% if r.password_sftp %}
-                            <span class="text-muted">••••••••</span>
-                        {% else %}
-                            <span class="text-danger">No configurada</span>
-                        {% endif %}
-                    </td>
-                    
-                    <td>{{ r.puerto_sftp }}</td>
+<!-- TITULO -->
+<h5 class="fw-bold mb-3 mt-3">Lista de Rutas</h5>
 
-                    <!-- Estado visual -->
-                    <td class="text-center">
-                        {% if r.estado_sftp == "Activo" %}
-                                    <span class="badge bg-success">{{ r.estado_sftp }}</span>
-                            {% else %}
-                                    <span class="badge bg-secondary">{{ r.estado_sftp }}</span>
-                        {% endif %}
-                    </td>
-                                       
-                    <!-- Comercios Asociados -->
-                    <td>
-                        {% if r.comercios.exists %}
-                            {% for comercio in r.comercios.all %}
-                                <span class="badge bg-primary me-1">
-                                    {{ comercio.nombre }}
-                                </span>
-                            {% endfor %}
-                        {% else %}
-                            <span class="text-muted">Sin comercios</span>
-                        {% endif %}
-                    </td>
+<!-- WRAPPER CON SCROLL -->
+<div class="ruta-table-wrapper">
 
-                    <!-- Ruta Producción -->
-                    <td>{{ r.ruta_sftp_produccion }}</td>
+    <table class="table table-bordered table-striped align-middle text-nowrap mb-0">
+        
+        <!-- HEADER -->
+        <thead class="table-success text-center sticky-header">
+            <tr>
+                <th>N°</th>
+                <th>Proveedor</th>
+                <th>Servidor SFTP</th>
+                <th>Usuario</th>
+                <th>Password</th>
+                <th>Puerto</th>
+                <th>Estado</th>
+                <th>Comercios</th>
+                <th>Ruta Producción</th>
+                <th>Ruta Pruebas</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
 
-                    <!-- Ruta Pruebas -->
-                    <td>{{ r.ruta_sftp_pruebas }}</td>
+        <!-- BODY -->
+        <tbody>
+            {% for r in rutas %}
+            <tr>
 
-                    <td class="text-center">
+                <!-- NUMERACIÓN -->
+                <td class="text-center">
+                    {{ start_index|add:forloop.counter0 }}
+                </td>
 
-                                <!-- Botón Editar (Ruta de Entrega) -->
-                                <button 
-                                    type="button" 
-                                    class="btn btn-sm btn-outline-primary editar-btn"
-                                    data-id="{{ r.id }}"
-                                    data-nombre_servidor_sftp="{{ r.nombre_servidor_sftp|default_if_none:''|escape }}"
-                                    data-user_sftp="{{ r.user_sftp|default_if_none:''|escape }}"
-                                    data-password_sftp="{{ r.password_sftp|default_if_none:''|escape }}"
-                                    data-puerto_sftp="{{ r.puerto_sftp|default_if_none:'' }}"
-                                    data-estado_sftp="{{ r.estado_sftp|default_if_none:''|escape }}"
-                                    data-ruta_sftp_produccion="{{ r.ruta_sftp_produccion|default_if_none:''|escape }}"
-                                    data-ruta_sftp_pruebas="{{ r.ruta_sftp_pruebas|default_if_none:''|escape }}"
-                                    data-comercio-id="{% if r.comercios.exists %}{{ r.comercios.first.id }}{% endif %}"
-                                    data-proveedor-id="{% if r.proveedores.exists %}{{ r.proveedores.first.id }}{% endif %}"
-                                    data-bs-toggle="tooltip" 
-                                    title="Editar Ruta de Entrega">
-                                    <i class="bi bi-pencil-square"></i>
-                                </button>
+                <!-- PROVEEDORES -->
+                <td>
+                    {% if r.proveedores.exists %}
+                        {% for p in r.proveedores.all %}
+                            <span class="badge bg-light border text-secondary">
+                                {{ p.nombre_proveedor }}
+                            </span>
+                        {% endfor %}
+                    {% else %}
+                        <span class="text-muted">Sin proveedores</span>
+                    {% endif %}
+                </td>
 
-                                <!-- Botón para ver Prooveedores Asociados en Prooveedores.html -->
+                <td>{{ r.nombre_servidor_sftp }}</td>
+                <td>{{ r.user_sftp }}</td>
 
-                                <!-- Botón para ver Proveedores Asociados -->
-                                <a href="{% url 'proveedores' %}?ruta_id={{ r.id }}"
-                                    class="btn btn-sm btn-outline-success"
-                                    title="Ver proveedor">
-                                     <i class="bi bi-people"></i>
-                                </a>
+                <!-- PASSWORD -->
+                <td>
+                    {% if r.password_sftp %}
+                        <span class="text-muted">••••••••</span>
+                    {% else %}
+                        <span class="text-danger">No configurada</span>
+                    {% endif %}
+                </td>
 
-                                <!-- Eliminar con confirmación -->
-                                <a href="{% url 'eliminar_rutas' r.id %}" 
-                                    class="btn btn-sm btn-outline-danger eliminar-btn"
-                                    onclick="return confirm('¿Estás seguro de que deseas eliminar esta ruta?');"
-                                    data-nombre="{{ r.nombre_servidor_sftp }}"
-                                    data-bs-toggle="tooltip"
-                                    title="Eliminar ruta">
-                                    <i class="bi bi-trash"></i>
-                                </a>
+                <td>{{ r.puerto_sftp }}</td>
 
-                            </td>
+                <!-- ESTADO -->
+                <td class="text-center">
+                    {% if r.estado_sftp == "Activo" %}
+                        <span class="badge bg-success">{{ r.estado_sftp }}</span>
+                    {% else %}
+                        <span class="badge bg-secondary">{{ r.estado_sftp }}</span>
+                    {% endif %}
+                </td>
 
-                </tr>
-                {% empty %}
-                <tr><td colspan="9" class="text-center text-muted">No hay rutas registradas</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+                <!-- COMERCIOS -->
+                <td>
+                    {% if r.comercios.exists %}
+                        {% for comercio in r.comercios.all %}
+                            <span class="badge bg-primary me-1">
+                                {{ comercio.nombre }}
+                            </span>
+                        {% endfor %}
+                    {% else %}
+                        <span class="text-muted">Sin comercios</span>
+                    {% endif %}
+                </td>
+
+                <td>{{ r.ruta_sftp_produccion }}</td>
+                <td>{{ r.ruta_sftp_pruebas }}</td>
+
+                <!-- ACCIONES -->
+                <td class="text-center">
+
+                    <!-- EDITAR -->
+                    <button 
+                        type="button" 
+                        class="btn btn-sm btn-outline-primary editar-btn"
+                        data-id="{{ r.id }}"
+                        data-nombre_servidor_sftp="{{ r.nombre_servidor_sftp|default_if_none:''|escape }}"
+                        data-user_sftp="{{ r.user_sftp|default_if_none:''|escape }}"
+                        data-password_sftp="{{ r.password_sftp|default_if_none:''|escape }}"
+                        data-puerto_sftp="{{ r.puerto_sftp }}"
+                        data-estado_sftp="{{ r.estado_sftp }}"
+                        data-ruta_sftp_produccion="{{ r.ruta_sftp_produccion|escape }}"
+                        data-ruta_sftp_pruebas="{{ r.ruta_sftp_pruebas|escape }}"
+                        data-bs-toggle="tooltip"
+                        title="Editar Ruta">
+                        <i class="bi bi-pencil-square"></i>
+                    </button>
+
+                    <!-- VER PROVEEDORES -->
+                    <a href="{% url 'proveedores' %}?ruta_id={{ r.id }}"
+                        class="btn btn-sm btn-outline-success"
+                        title="Ver proveedor">
+                        <i class="bi bi-people"></i>
+                    </a>
+
+                    <!-- ELIMINAR -->
+                    <a href="{% url 'eliminar_rutas' r.id %}" 
+                        class="btn btn-sm btn-outline-danger"
+                        onclick="return confirm('¿Eliminar esta ruta?');"
+                        title="Eliminar">
+                        <i class="bi bi-trash"></i>
+                    </a>
+
+                </td>
+
+            </tr>
+
+            {% empty %}
+            <tr>
+                <td colspan="11" class="text-center text-muted">
+                    No hay rutas registradas
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- PAGINACIÓN -->
+    <nav aria-label="Paginación">
+        <ul class="pagination justify-content-center mt-3">
+
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1">«</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">‹</a>
+                </li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                {% elif num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">›</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">»</a>
+                </li>
+            {% endif %}
+
+        </ul>
+    </nav>
+
 </div>
 
 <!-- === SCRIPT === -->
