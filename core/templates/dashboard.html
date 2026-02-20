@@ -248,7 +248,7 @@
                                     data-estado="{{ c.estado }}"
                                     data-tipo="{{ c.tipo }}"
                                     data-pais="{{ c.pais }}"
-                                    data-pais="{{ c.transformaciones }}"
+                                    data-transformaciones="{{ c.transformaciones }}"
                                     data-periodo_centinela="{{ c.periodo_centinela }}"
                                     data-hora_centinela="{{ c.hora_centinela }}"
                                     data-periodo_ejecucion="{{ c.periodo_ejecucion }}"
@@ -358,7 +358,10 @@ document.addEventListener('DOMContentLoaded', function() {
             setValue('#estado', btn.dataset.estado);
             setValue('#tipo', btn.dataset.tipo);
             setValue('input[name="pais"]', btn.dataset.pais);
-            setValue('input[name="transformaciones"]', btn.dataset.transformaciones);
+
+            // ✅ FIX ERROR DE SELECTOR
+            setValue('#transformaciones', btn.dataset.transformaciones);
+
             setValue('input[name="periodo_centinela"]', btn.dataset.periodo_centinela);
             setValue('input[name="hora_centinela"]', btn.dataset.hora_centinela);
             setValue('input[name="periodo_ejecucion"]', btn.dataset.periodo_ejecucion);
@@ -366,10 +369,14 @@ document.addEventListener('DOMContentLoaded', function() {
             setValue('input[name="hora_reintentos"]', btn.dataset.hora_reintentos);
             setValue('input[name="nombre_servidor"]', btn.dataset.nombre_servidor);
             setValue('input[name="ubicacion_servidor"]', btn.dataset.ubicacion_servidor);
-            setValue('input[name="estado_soporte"]', btn.dataset.estado_soporte);
             setValue('input[name="nombre_contacto"]', btn.dataset.nombre_contacto);
             setValue('input[name="email_contacto"]', btn.dataset.email_contacto);
-            setValue('input[name="observaciones"]', btn.dataset.observaciones);
+
+            // ✅ IMPORTANTE: DATE FUNCIONA CON ID
+            setValue('#fecha_inicio_soporte', btn.dataset.fecha_inicio_soporte);
+
+            // ✅ TEXTAREA CORRECTO
+            setValue('#observaciones', btn.dataset.observaciones);
 
             // Campo oculto comercio_id
             let inputId = document.querySelector('input[name="comercio_id"]');

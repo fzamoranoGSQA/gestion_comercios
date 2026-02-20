@@ -17,7 +17,7 @@ from datetime import datetime
 from core.models import Proveedor, ProveedorComercio, Comercio
 from django.db import transaction
 from core.models import ProveedorComercio
-
+from .models import RutaEntrega                                                                                                                                                                 
 
 
 
@@ -406,7 +406,7 @@ def proveedores(request):
                 filtros &= Q(comercios__id__in=comercios_ids)
 
             proveedores_qs = proveedores_qs.filter(filtros).distinct()
-
+            
     # ==============================================
     # 🔢 MÉTRICAS
     # ==============================================
@@ -427,6 +427,19 @@ def proveedores(request):
     page_obj = paginator.get_page(page_number)
 
     start_index = page_obj.start_index() if TOTAL_FILTRADO else 0
+    
+    
+    proveedores_data = [
+    {
+        "id": p.id,
+        "comercios_ids": list(p.comercios.values_list("id", flat=True)),
+        "estados": {
+            pc.comercio.id: pc.estado
+            for pc in p.proveedor_comercios.all()
+        }
+    }
+    for p in proveedores_qs
+]
 
     # ==============================================
     # 🔚 CONTEXTO FINAL
@@ -441,6 +454,7 @@ def proveedores(request):
         "total_conexiones": total_conexiones,
         "page_obj": page_obj,
         "start_index": start_index,
+        
     }
 
     return render(request, "proveedores.html", context)
@@ -518,6 +532,15 @@ def data_source(request):
 # ---------- Rutas (Consulta / Búsqueda / Creación Rápida) ----------
 @login_required(login_url='/')  # Redirige al login si no está autenticado
 def rutas(request):
+    # ================= PAGINACIÓN =================
+    rutas_list = RutaEntrega.objects.all().order_by('id')
+
+    paginator = Paginator(rutas_list, 10)  # 10 registros por página
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    start_index = (page_obj.number - 1) * paginator.per_page + 1
+
     # --- Obtener datos base ---
     comercios = Comercio.objects.filter(estado__iexact="Activo").order_by("nombre")
     proveedores = Proveedor.objects.filter(estado__iexact="Activo").order_by("nombre_proveedor")
@@ -658,6 +681,10 @@ def rutas(request):
         "proveedores": proveedores,
         "rutas": rutas,
         "rutas_data": json.dumps(rutas_data, ensure_ascii=False),
+         'rutas': page_obj,
+        'page_obj': page_obj,
+        'total_rutas': rutas_list.count(),
+        'start_index': start_index
     }
     return render(request, "ruta_entrega.html", context)
 
