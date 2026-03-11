@@ -7,12 +7,26 @@ from django.conf import settings
 from django.conf.urls.static import static
 import os
 from core.views import limpiar_proveedores
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from core.views import ComercioViewSet, ServidorViewSet, ProveedorViewSet, RutaEntregaViewSet
+from rest_framework_simplejwt.views import (TokenObtainPairView, TokenRefreshView,)
 
 
-
+router = DefaultRouter()
+router.register(r'comercios', ComercioViewSet)
+router.register(r'servidores', ServidorViewSet)
+router.register(r'proveedores', ProveedorViewSet)
+router.register(r'rutaentrega', RutaEntregaViewSet)
 
 urlpatterns = [
+    
     path('admin/', admin.site.urls),
+    path('api/', include(router.urls)),
+    
+    #Token API
+    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
     # Autenticación
     path('login/', views.login_view, name='login'),
@@ -48,7 +62,14 @@ urlpatterns = [
     # Rutas
     path("rutas/", views.rutas, name="rutas"),
     path("eliminar_rutas/<int:id>/", views.eliminar_rutas, name="eliminar_rutas"),
+    
+    #Exportar Comerios Excel
         
+    path("exportar-comercios/", views.exportar_comercios_excel, name="exportar_comercios"), 
+    
+    #Exportar Proveedores Excel   
+    
+    path("exportar-proveedores/", views.exportar_proveedores_excel, name="exportar_proveedores"),
 
     # 🔑 Recuperación de contraseña
     path(

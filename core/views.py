@@ -17,8 +17,14 @@ from datetime import datetime
 from core.models import Proveedor, ProveedorComercio, Comercio
 from django.db import transaction
 from core.models import ProveedorComercio
-from .models import RutaEntrega                                                                                                                                                                 
-
+from .models import Comercio, Servidor, Proveedor, RutaEntrega
+from rest_framework import viewsets   
+from .serializers import ComercioSerializer, ServidorSerializer, ProveedorSerializer, RutaEntregaSerializer                                                                                                                                                          
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter
+from rest_framework.permissions import IsAuthenticated
+import openpyxl
+from django.http import HttpResponse
 
 
 
@@ -165,6 +171,7 @@ def dashboard(request):
         # 🔍 BUSCAR COMERCIOS
         # ==========================================
         elif accion == "buscar":
+
             filtros = Q()
 
             campos_busqueda = [
@@ -176,16 +183,27 @@ def dashboard(request):
 
             for campo in campos_busqueda:
                 valor = request.POST.get(campo, "").strip()
+
                 if valor:
-                    filtros &= Q(**{f"{campo}__icontains": valor})
+
+                    # estado debe buscarse exacto
+                    if campo == "estado":
+                        filtros &= Q(**{f"{campo}__iexact": valor})
+
+                    else:
+                        filtros &= Q(**{f"{campo}__icontains": valor})
 
             if filtros:
+
                 comercios = comercios.filter(filtros)
+
                 messages.info(
                     request,
                     f"🔍 Se encontraron {comercios.count()} comercios."
                 )
+
             else:
+
                 messages.warning(
                     request,
                     "⚠️ No se ingresaron criterios de búsqueda."
@@ -232,6 +250,58 @@ def consultar_comercios(request):
             "query": query
         }
     )
+
+# ================= Exporta Comercios Excel =================    
+def exportar_comercios_excel(request):
+    comercios = Comercio.objects.all().order_by("nombre")
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Comercios"
+
+    # Encabezados
+    headers = [
+        "Nombre", "UEN", "Estado", "Tipo", "País",
+        "Transformaciones", "Periodo Centinela", "Hora Centinela",
+        "Periodo Ejecución", "Hora Ejecución", "Hora Reintentos",
+        "Nombre Servidor", "Ubicación Servidor",
+        "Fecha Inicio Soporte", "Nombre Contacto",
+        "Email Contacto", "Observaciones"
+    ]
+
+    ws.append(headers)
+
+    # Datos
+    for c in comercios:
+        ws.append([
+            c.nombre,
+            c.uen,
+            c.estado,
+            c.tipo,
+            c.pais,
+            c.transformaciones,
+            c.periodo_centinela,
+            c.hora_centinela,
+            c.periodo_ejecucion,
+            c.hora_ejecucion,
+            c.hora_reintentos,
+            c.nombre_servidor,
+            c.ubicacion_servidor,
+            str(c.fecha_inicio_soporte),
+            c.nombre_contacto,
+            c.email_contacto,
+            c.observaciones
+        ])
+
+    response = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+
+    response["Content-Disposition"] = "attachment; filename=comercios.xlsx"
+
+    wb.save(response)
+
+    return response
 
 # ---------- Proveedores (Consulta / Búsqueda / Creación Rápida) ----------
 @login_required(login_url='/')
@@ -459,7 +529,69 @@ def proveedores(request):
 
     return render(request, "proveedores.html", context)
 
+# Exporta Proveedores a Excel
+    
+def exportar_proveedores_excel(request):
 
+        proveedores = Proveedor.objects.prefetch_related(
+            "comercios",
+            "proveedor_comercios__comercio"
+        )
+
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Proveedores"
+
+        headers = [
+            "Nombre",
+            "EAN",
+            "Estado Comercio",
+            "Documentos Descarga",
+            "Periodo Ejecucion",
+            "Hora Ejecucion",
+            "Hora Reintentos",
+            "Tipo Ejecucion",
+            "Cantidad Conexiones",
+            "Comercios Asociados",
+            "Observaciones"
+        ]
+
+        ws.append(headers)
+
+        for p in proveedores:
+
+            estados = ", ".join(
+                f"{pc.comercio.nombre}-{pc.estado}"
+                for pc in p.proveedor_comercios.all()
+            )
+
+            comercios = ", ".join(
+                c.nombre for c in p.comercios.all()
+            )
+
+            ws.append([
+                p.nombre_proveedor,
+                p.ean,
+                estados,
+                p.documentos_descarga,
+                p.periodo_ejecucion,
+                p.hora_ejecucion,
+                p.hora_reintentos,
+                p.tipo_ejecucion,
+                p.cantidad_conexiones,
+                comercios,
+                p.observaciones
+            ])
+
+        response = HttpResponse(
+            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+
+        response["Content-Disposition"] = "attachment; filename=proveedores.xlsx"
+
+        wb.save(response)
+
+        return response
 
 
 # -------- FUNCIONES AUXILIARES --------
@@ -532,26 +664,29 @@ def data_source(request):
 # ---------- Rutas (Consulta / Búsqueda / Creación Rápida) ----------
 @login_required(login_url='/')  # Redirige al login si no está autenticado
 def rutas(request):
-    # ================= PAGINACIÓN =================
-    rutas_list = RutaEntrega.objects.all().order_by('id')
 
-    paginator = Paginator(rutas_list, 10)  # 10 registros por página
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-
-    start_index = (page_obj.number - 1) * paginator.per_page + 1
-
-    # --- Obtener datos base ---
+    # ================= DATOS BASE =================
     comercios = Comercio.objects.filter(estado__iexact="Activo").order_by("nombre")
-    proveedores = Proveedor.objects.filter(estado__iexact="Activo").order_by("nombre_proveedor")
-    rutas = RutaEntrega.objects.all().prefetch_related("comercios", "proveedores")
 
+    proveedores = (
+        Proveedor.objects
+        .filter(estado__in=["Activo", "Suspendido", "Inactivo"])
+        .order_by("nombre_proveedor")
+    )
+
+    rutas_qs = RutaEntrega.objects.all().prefetch_related("comercios", "proveedores").order_by("id")
+
+    # ================= POST =================
     if request.method == "POST":
+
         accion = request.POST.get("accion")
         ruta_id = request.POST.get("ruta_id")
 
-        # ---------- GUARDAR / EDITAR ----------
+        # ==========================================
+        # GUARDAR / EDITAR
+        # ==========================================
         if accion == "guardar":
+
             nombre_servidor = request.POST.get("nombre_servidor_sftp", "").strip()
             user_sftp = request.POST.get("user_sftp", "").strip()
             password_sftp = request.POST.get("password_sftp", "").strip()
@@ -560,7 +695,7 @@ def rutas(request):
             ruta_sftp_produccion = request.POST.get("ruta_sftp_produccion", "").strip()
             ruta_sftp_pruebas = request.POST.get("ruta_sftp_pruebas", "").strip()
 
-            # --- Crear o editar ruta ---
+            # --- Crear o editar ---
             if ruta_id:
                 ruta = get_object_or_404(RutaEntrega, id=ruta_id)
                 mensaje_accion = "actualizada"
@@ -568,7 +703,7 @@ def rutas(request):
                 ruta = RutaEntrega()
                 mensaje_accion = "creada"
 
-            # --- Validación de campos obligatorios ---
+            # --- Validación ---
             campos_obligatorios = {
                 "nombre_servidor_sftp": nombre_servidor,
                 "user_sftp": user_sftp,
@@ -577,30 +712,45 @@ def rutas(request):
                 "ruta_sftp_produccion": ruta_sftp_produccion,
                 "ruta_sftp_pruebas": ruta_sftp_pruebas,
             }
-            if not ruta_id:  # exigir password solo en creación
+
+            if not ruta_id:
                 campos_obligatorios["password_sftp"] = password_sftp
 
-            faltantes = [campo.replace("_", " ").capitalize() for campo, valor in campos_obligatorios.items() if not valor]
+            faltantes = [
+                campo.replace("_", " ").capitalize()
+                for campo, valor in campos_obligatorios.items()
+                if not valor
+            ]
+
             if faltantes:
-                messages.error(request, f"⚠️ Los siguientes campos son obligatorios: {', '.join(faltantes)}.")
+                messages.error(
+                    request,
+                    f"⚠️ Los siguientes campos son obligatorios: {', '.join(faltantes)}."
+                )
                 return redirect("rutas")
 
-            # --- Validar puerto ---
+            # --- Puerto ---
             try:
-                puerto_sftp = int(puerto_sftp) if puerto_sftp else 22
-            except ValueError:
-                messages.warning(request, "⚠️ El puerto SFTP no es válido, se usará 22 por defecto.")
+                puerto_sftp = int(puerto_sftp)
+            except:
+                messages.warning(
+                    request,
+                    "⚠️ El puerto SFTP no es válido, se usará 22 por defecto."
+                )
                 puerto_sftp = 22
 
-            # --- Asignar valores ---
+            # --- Asignación ---
             ruta.nombre_servidor_sftp = nombre_servidor
             ruta.user_sftp = user_sftp
+
             if password_sftp and password_sftp != "••••••••":
-                ruta.password_sftp = password_sftp  # 🔒 cifrado automático en el setter
+                ruta.password_sftp = password_sftp
+
             ruta.puerto_sftp = puerto_sftp
             ruta.estado_sftp = estado_sftp
             ruta.ruta_sftp_produccion = ruta_sftp_produccion
             ruta.ruta_sftp_pruebas = ruta_sftp_pruebas
+
             ruta.save()
 
             # --- Relaciones ManyToMany ---
@@ -609,15 +759,20 @@ def rutas(request):
 
             if comercios_ids:
                 ruta.comercios.set([c for c in comercios_ids if c])
+
             if proveedores_ids:
                 ruta.proveedores.set([p for p in proveedores_ids if p])
 
             messages.success(request, f"✅ Ruta {mensaje_accion} correctamente.")
             return redirect("rutas")
 
-        # ---------- BUSCAR ----------
+        # ==========================================
+        # BUSCAR
+        # ==========================================
         elif accion == "buscar":
+
             filtros = Q()
+
             nombre_servidor = request.POST.get("nombre_servidor_sftp", "").strip()
             user_sftp = request.POST.get("user_sftp", "").strip()
             puerto_sftp = request.POST.get("puerto_sftp", "").strip()
@@ -627,46 +782,66 @@ def rutas(request):
             comercio_id = request.POST.get("comercio", "").strip()
             proveedor_id = request.POST.get("proveedor", "").strip()
 
-            # --- Filtros seguros (sin password) ---
             if nombre_servidor:
                 filtros &= Q(nombre_servidor_sftp__icontains=nombre_servidor)
+
             if user_sftp:
                 filtros &= Q(user_sftp__icontains=user_sftp)
+
             if puerto_sftp:
                 filtros &= Q(puerto_sftp__icontains=puerto_sftp)
+
             if estado_sftp:
                 filtros &= Q(estado_sftp__iexact=estado_sftp)
+
             if ruta_sftp_produccion:
                 filtros &= Q(ruta_sftp_produccion__icontains=ruta_sftp_produccion)
+
             if ruta_sftp_pruebas:
                 filtros &= Q(ruta_sftp_pruebas__icontains=ruta_sftp_pruebas)
+
             if comercio_id:
                 filtros &= Q(comercios__id=comercio_id)
+
             if proveedor_id:
                 filtros &= Q(proveedores__id=proveedor_id)
 
             if filtros:
-                rutas = (
-                    RutaEntrega.objects.filter(filtros)
-                    .distinct()
-                    .prefetch_related("comercios", "proveedores")
-                )
-                if rutas.exists():
-                    messages.success(request, f"🔍 Se encontraron {rutas.count()} rutas que coinciden con los criterios.")
-                else:
-                    messages.info(request, "🔍 No se encontraron rutas con esos filtros.")
-            else:
-                messages.warning(request, "⚠️ No se ingresó ningún criterio de búsqueda. Mostrando todas las rutas.")
-                rutas = RutaEntrega.objects.all().prefetch_related("comercios", "proveedores")
+                rutas_qs = rutas_qs.filter(filtros).distinct()
 
-    # --- Preparar rutas_data para el template (sin exponer password real) ---
+                if rutas_qs.exists():
+                    messages.success(
+                        request,
+                        f"🔍 Se encontraron {rutas_qs.count()} rutas que coinciden con los criterios."
+                    )
+                else:
+                    messages.info(
+                        request,
+                        "🔍 No se encontraron rutas con esos filtros."
+                    )
+            else:
+                messages.warning(
+                    request,
+                    "⚠️ No se ingresó ningún criterio de búsqueda."
+                )
+
+    # ================= PAGINACIÓN =================
+    paginator = Paginator(rutas_qs, 10)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    start_index = (page_obj.number - 1) * paginator.per_page + 1
+
+    # ================= SERIALIZACIÓN =================
     rutas_data = []
-    for r in rutas:
+
+    for r in rutas_qs:
+
         rutas_data.append({
             "id": r.id,
             "nombre_servidor_sftp": r.nombre_servidor_sftp,
             "user_sftp": r.user_sftp,
-            "password_sftp": "••••••••" if r._password_sftp else "",  # solo marcador visual
+            "password_sftp": "••••••••" if r._password_sftp else "",
             "puerto_sftp": r.puerto_sftp,
             "estado_sftp": r.estado_sftp,
             "ruta_sftp_produccion": r.ruta_sftp_produccion,
@@ -675,17 +850,23 @@ def rutas(request):
             "proveedores_ids": list(r.proveedores.values_list("id", flat=True)),
         })
 
-    # --- Render final ---
+    # ================= CONTEXT =================
     context = {
+
         "comercios": comercios,
         "proveedores": proveedores,
-        "rutas": rutas,
+
+        "rutas": page_obj,
+        "page_obj": page_obj,
+
+        "total_rutas": rutas_qs.count(),
+        "start_index": start_index,
+
         "rutas_data": json.dumps(rutas_data, ensure_ascii=False),
-         'rutas': page_obj,
-        'page_obj': page_obj,
-        'total_rutas': rutas_list.count(),
-        'start_index': start_index
     }
+    
+    print("PROVEEDORES:", list(proveedores.values("id", "nombre_proveedor", "estado")))
+
     return render(request, "ruta_entrega.html", context)
 
 
@@ -841,3 +1022,53 @@ def limpiar_proveedores(request):
         messages.error(request, f"❌ Error eliminando proveedores: {e}")
 
     return redirect('proveedores')
+
+#Exponer APIs
+
+# --- COMERCIO ---
+class ComercioViewSet(viewsets.ModelViewSet):
+    queryset = Comercio.objects.all()
+    serializer_class = ComercioSerializer
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    search_fields = ['nombre']  # ajusta según tu modelo
+    permission_classes = [IsAuthenticated]
+
+
+# --- SERVIDOR ---
+class ServidorViewSet(viewsets.ModelViewSet):
+    queryset = Servidor.objects.prefetch_related("comercios").all()
+    serializer_class = ServidorSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['nombre_servidor_rpa']  # ajusta si aplica
+    permission_classes = [IsAuthenticated]
+
+
+# --- PROVEEDOR ---
+class ProveedorViewSet(viewsets.ModelViewSet):
+    queryset = Proveedor.objects.prefetch_related("comercios").all()
+    serializer_class = ProveedorSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['estado', 'tipo_ejecucion']
+    permission_classes = [IsAuthenticated]
+
+
+# --- RUTA ENTREGA ---
+class RutaEntregaViewSet(viewsets.ModelViewSet):
+    queryset = RutaEntrega.objects.prefetch_related("comercios", "proveedores").all()
+    serializer_class = RutaEntregaSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['estado_sftp']
+    permission_classes = [IsAuthenticated]
+
+    # 🔥 endpoint custom: /api/rutas-entrega/{id}/proveedores/
+    from rest_framework.decorators import action
+    from rest_framework.response import Response
+
+    @action(detail=True, methods=['get'])
+    def proveedores(self, request, pk=None):
+        ruta = self.get_object()
+        proveedores = ruta.proveedores.all()
+        serializer = ProveedorSerializer(proveedores, many=True)
+        return Response(serializer.data)
+    
+    
