@@ -26,8 +26,8 @@ class Comercio(models.Model):
     periodo_centinela = models.CharField(max_length=50, blank=True)
     hora_centinela = models.CharField(max_length=50, blank=True)
     periodo_ejecucion = models.CharField(max_length=50, blank=True)
-    hora_ejecucion = models.CharField(max_length=50, blank=True)
-    hora_reintentos = models.CharField(max_length=50, blank=True)
+    hora_ejecucion = models.CharField(max_length=300, null=True, blank=True)
+    hora_reintentos = models.CharField(max_length=300, null=True, blank=True)
     nombre_servidor = models.CharField(max_length=100, blank=True)
     ubicacion_servidor = models.CharField(max_length=100, blank=True)
     nombre_contacto = models.CharField(max_length=100, blank=True)
@@ -56,8 +56,8 @@ class Proveedor(models.Model):
     )
     ean = models.CharField(max_length=50, unique=True)
     periodo_ejecucion = models.CharField(max_length=50, null=True, blank=True)
-    hora_ejecucion = models.CharField(max_length=100, null=True, blank=True)
-    hora_reintentos = models.CharField(max_length=100, null=True, blank=True)
+    hora_ejecucion = models.CharField(max_length=300, null=True, blank=True)
+    hora_reintentos = models.CharField(max_length=300, null=True, blank=True)
     cantidad_conexiones = models.PositiveIntegerField(default=0)
     estado = models.CharField(
         max_length=20,

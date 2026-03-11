@@ -99,17 +99,16 @@
 
                     <!-- Hora Ejecición -->
                     <div class="col-md-4 form-floating">
-                        <input type="time" name="hora_ejecucion" class="form-control"
-                            id="hora_ejecucion" value="{{ hora_ejecucion }}">
+                        <input type="text" name="hora_ejecucion" class="form-control shadow-sm" id="hora_ejecucion"
+                            placeholder="Hora Ejecución" value="{{ hora_ejecucion }}">
                         <label for="hora_ejecucion">Hora Ejecución</label>
                     </div>
 
                     <!-- Hora Reintentos -->
                     <div class="col-md-4 form-floating">
-                        <input type="text" name="hora_reintentos" class="form-control"
-                            id="hora_reintentos" placeholder="hora_reintentos"
-                            value="{{ hora_reintentos }}">
-                        <label for="hora_reintentos">Hora Reintentos</label>
+                        <input type="text" name="hora_reintentos" class="form-control shadow-sm" id="hora_reintentos"
+                            placeholder="Hora Reintentos" value="{{ hora_reintentos }}">
+                        <label for="hora_reintentos">Horas Reintentos</label>
                     </div>
 
                     <!-- Nombre Servidor -->
@@ -166,6 +165,13 @@
                         <button class="btn btn-outline-success px-4" type="submit" name="accion" value="buscar">
                             <i class="bi bi-search"></i> Consultar Comercio
                         </button>
+
+                       
+
+                            <a href="{% url 'exportar_comercios' %}" class="btn btn-success">
+                                <i class="bi bi-file-earmark-excel"></i> Exportar Excel
+                            </a>
+
                     </div>
             </form>
 
@@ -174,6 +180,8 @@
                     Total Comercios: <strong>{{ total_general }}</strong>
                 </small>
             </div>
+
+                   
             
             <!-- Tabla de Comercios -->
             <h5 class="fw-bold mb-3">Lista de Comercios</h5>

@@ -132,6 +132,12 @@
                 <button class="btn btn-outline-success px-4" type="submit" name="accion" value="buscar">
                     <i class="bi bi-search"></i> Consultar Proveedor
                 </button>
+                <a href="{% url 'exportar_proveedores' %}"
+                class="btn btn-outline-success px-4">
+
+                    <i class="bi bi-file-earmark-excel"></i>
+                    Exportar Excel
+                </a>
             </div>
         </form>
         <br></br>
